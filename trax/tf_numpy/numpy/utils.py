@@ -300,6 +300,15 @@ def getitem(a, slice_spec):
   return _maybe_static(a)[slice_spec]
 
 
+def reduce_all(input_tensor, axis=None, keepdims=False):
+  """A version of tf.reduce_all that eagerly evaluates if possible."""
+  v = tf.get_static_value(input_tensor)
+  if v is None:
+    return tf.reduce_all(input_tensor, axis=axis, keepdims=keepdims)
+  else:
+    return v.all(axis=axis, keepdims=keepdims)
+
+
 def tf_broadcast(*args):
   """Broadcast tensors.
 

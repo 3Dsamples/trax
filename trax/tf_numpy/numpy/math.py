@@ -1063,3 +1063,54 @@ def argmax(a, axis=None):
 @utils.np_doc(np.argmin)
 def argmin(a, axis=None):
   return _argminmax(tf.argmin, a, axis)
+
+
+@utils.np_doc(np.average)
+def average(a, axis=None, weights=None, returned=False):  # pylint: disable=missing-docstring
+  a = array_creation.asarray(a)
+  if weights is None:  # Treat all weights as 1
+    if not np.issubdtype(a.dtype, np.inexact):
+      a = a.astype(utils.result_type(a.dtype, dtypes.default_float_type()))
+    avg = tf.reduce_mean(a.data, axis=axis)
+    if returned:
+      if axis is None:
+        weights_sum = tf.size(a.data)
+      else:
+        weights_sum = tf.shape(a.data)[axis]
+  else:
+    if np.issubdtype(a.dtype, np.inexact):
+      out_dtype = utils.result_type(a.dtype, weights)
+    else:
+      out_dtype = utils.result_type(a.dtype, weights,
+                                    dtypes.default_float_type())
+    a, weights = [array_creation.asarray(x, out_dtype).data
+                  for x in (a, weights)]
+    def shape_equal_case():
+      # This redundant broadcasting is for appeasing the shape checker. When the
+      # ranks of `a` and `weights` are known and different, while their shapes
+      # are unknown, the `cond` below will run shape checker on this branch and
+      # `reduce_sum(w, axis=axis)` will raise an error without this
+      # broadcasting.
+      w = tf.broadcast_to(weights, tf.shape(a))
+      weights_sum = tf.reduce_sum(w, axis=axis)
+      avg = tf.reduce_sum(a * w, axis=axis) / weights_sum
+      return avg, weights_sum
+    if axis is None:
+      avg, weights_sum = shape_equal_case()
+    else:
+      def shape_not_equal_case():
+        # If shape(a) and shape(weights) aren't equal, weights is assumed to be
+        # 1-D.
+        weights_sum = tf.reduce_sum(weights)
+        axes = tf.expand_dims(tf.stack([axis, 0]), -1)
+        avg = tf.tensordot(a, weights, axes) / weights_sum
+        return avg, weights_sum
+      avg, weights_sum = utils.cond(
+          utils.reduce_all(tf.shape(a) == tf.shape(weights)),
+          shape_equal_case, shape_not_equal_case)
+
+  avg = array_creation.asarray(avg)
+  if returned:
+    weights_sum = array_methods.broadcast_to(weights_sum, tf.shape(avg.data))
+    return avg, weights_sum
+  return avg
