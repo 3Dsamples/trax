@@ -734,7 +734,6 @@ class LaxBackedNumpyTests(jtu.JaxTestCase):
           jtu.format_shape_dtype_string(shape, dtype)),
        "shape": shape, "dtype": dtype}
       for shape in all_shapes for dtype in all_dtypes))
-  @disable
   def testNonzero(self, shape, dtype):
     rng = jtu.rand_some_zero()
     onp_fun = lambda x: onp.nonzero(x)
@@ -1674,7 +1673,6 @@ class LaxBackedNumpyTests(jtu.JaxTestCase):
         onp.array([0x2a], dtype=onp.uint8),
         check_dtypes=True)
 
-  @disable
   def testAllClose(self):
     rng = onp.random.RandomState(0)
     x = rng.randn(2, 2)
@@ -1685,7 +1683,7 @@ class LaxBackedNumpyTests(jtu.JaxTestCase):
       elements_close = list(map(allclose, list1, list2))
       return lnp.all(lnp.array(elements_close))
 
-    csame = api.jit(same)
+    csame = npe.jit(same)
 
     a1 = same((x, y), (x, y))
     a2 = csame((x, y), (x, y))
@@ -2315,7 +2313,6 @@ class LaxBackedNumpyTests(jtu.JaxTestCase):
     a = lnp.arange(4, dtype=lnp.complex64)
     self.assertEqual(a.dtype, lnp.complex64)
 
-  @disable
   def testIssue728(self):
     assert lnp.allclose(lnp.eye(5000), onp.eye(5000))
     self.assertEqual(0, onp.sum(lnp.eye(1050) - onp.eye(1050)))

@@ -367,6 +367,11 @@ def isclose(a, b, rtol=1e-05, atol=1e-08):
   return _bin_op(f, a, b)
 
 
+@utils.np_doc(np.allclose)
+def allclose(a, b, rtol=1e-05, atol=1e-08):
+  return array_methods.all(isclose(a, b, rtol=rtol, atol=atol))
+
+
 def _tf_gcd(x1, x2):
   def _gcd_cond_fn(x1, x2):
     return tf.reduce_any(x2 != 0)
@@ -1012,6 +1017,14 @@ def tile(a, reps):
   a = tf.reshape(a, a_shape)
 
   return arrays.tensor_to_ndarray(tf.tile(a, reps))
+
+
+@utils.np_doc(np.nonzero)
+def nonzero(a):
+  a = atleast_1d(a).data
+  return tf.nest.map_structure(
+      arrays.tensor_to_ndarray,
+      tf.unstack(tf.where(tf.cast(a, tf.bool)), axis=1))
 
 
 @utils.np_doc(np.count_nonzero)
