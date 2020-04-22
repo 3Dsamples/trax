@@ -84,7 +84,9 @@ class PositionalEncoding(base.Layer):
 
   def forward_with_state(self, inputs, weights=base.EMPTY_WEIGHTS,
                          state=base.EMPTY_STATE, rng=None):
-    if self._mode in ('train', 'eval'):
+    # Mode "collect" added temporarily. TODO(pkozakowski): Remove it once we get
+    # Transformer policies to work in predict mode.
+    if self._mode in ('train', 'eval', 'collect'):
       x = inputs
       symbol_size = jnp.shape(x)[1]
       px = weights[:, :symbol_size, :]
@@ -313,7 +315,9 @@ class DotProductCausalAttention(base.Layer):
                          state=base.EMPTY_STATE, rng=None):
     del weights
     q, k, v = inputs
-    if self._mode in ('train', 'eval'):
+    # Mode "collect" added temporarily. TODO(pkozakowski): Remove it once we get
+    # Transformer policies to work in predict mode.
+    if self._mode in ('train', 'eval', 'collect'):
       mask_size = q.shape[-2]
       # Not all backends define jnp.tril. However, using np.tril is inefficient
       # in that it creates a large global constant. TODO(kitaev): try to find an
@@ -334,7 +338,9 @@ class DotProductCausalAttention(base.Layer):
     return res, state
 
   def new_weights_and_state(self, input_signature):
-    if self._mode in ('train', 'eval'):
+    # Mode "collect" added temporarily. TODO(pkozakowski): Remove it once we get
+    # Transformer policies to work in predict mode.
+    if self._mode in ('train', 'eval', 'collect'):
       return base.EMPTY_WEIGHTS, base.EMPTY_STATE
 
     assert self._mode == 'predict'
