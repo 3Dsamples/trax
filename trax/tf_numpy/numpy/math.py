@@ -1079,3 +1079,11 @@ def argmax(a, axis=None):
 @utils.np_doc(np.argmin)
 def argmin(a, axis=None):
   return _argminmax(tf.argmin, a, axis)
+
+
+@utils.np_doc(np.append)
+def append(arr, values, axis=None):
+  if axis is None:
+    return concatenate([ravel(arr), ravel(values)], 0)
+  else:
+    return concatenate([arr, values], axis=axis)
